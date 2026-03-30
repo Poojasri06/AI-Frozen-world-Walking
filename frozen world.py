@@ -1,6 +1,30 @@
-import cv2
-import numpy as np
-import mediapipe as mp
+import importlib
+import os
+import subprocess
+import sys
+
+
+def _ensure_module(module_name, package_spec):
+    """Install a missing dependency at runtime when running in cloud environments."""
+    try:
+        return importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        is_streamlit_cloud = (
+            os.getenv("STREAMLIT_SERVER_PORT") is not None
+            or os.getenv("STREAMLIT_SHARING_MODE") is not None
+            or os.getenv("IS_STREAMLIT_CLOUD") is not None
+        )
+
+        if not is_streamlit_cloud:
+            raise
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package_spec])
+        return importlib.import_module(module_name)
+
+
+cv2 = _ensure_module("cv2", "opencv-python-headless==4.10.0.84")
+np = _ensure_module("numpy", "numpy==1.26.4")
+mp = _ensure_module("mediapipe", "mediapipe==0.10.14")
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
